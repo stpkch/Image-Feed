@@ -71,6 +71,7 @@
                                             <outlet property="cellImage" destination="UHT-CC-7rY" id="m9i-Vu-M30"/>
                                             <outlet property="dateLabel" destination="zZ7-qv-kLf" id="v4s-uC-ojU"/>
                                             <outlet property="likeButton" destination="sdE-8c-JJO" id="qI9-Lz-Dgp"/>
+                                            <segue destination="KFW-Y8-gau" kind="show" id="712-Hm-Fy1"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
@@ -97,6 +98,36 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1828.985507246377" y="-218.30357142857142"/>
+        </scene>
+        <!--Single Image View Controller-->
+        <scene sceneID="ZJq-Gr-p3W">
+            <objects>
+                <viewController id="KFW-Y8-gau" customClass="SingleImageViewController" customModule="Image_Feed" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="h2i-mx-6pB">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="0" translatesAutoresizingMaskIntoConstraints="NO" id="ZBo-oy-VFV">
+                                <rect key="frame" x="0.0" y="92" width="414" height="721"/>
+                            </imageView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="7RM-LG-zu7"/>
+                        <color key="backgroundColor" red="0.1019607843" green="0.1058823529" blue="0.1333333333" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstItem="7RM-LG-zu7" firstAttribute="bottom" secondItem="ZBo-oy-VFV" secondAttribute="bottom" id="HVR-hD-waq"/>
+                            <constraint firstItem="ZBo-oy-VFV" firstAttribute="top" secondItem="7RM-LG-zu7" secondAttribute="top" id="OPR-Tw-mXm"/>
+                            <constraint firstItem="ZBo-oy-VFV" firstAttribute="leading" secondItem="7RM-LG-zu7" secondAttribute="leading" id="xV4-Yr-l6d"/>
+                            <constraint firstItem="7RM-LG-zu7" firstAttribute="trailing" secondItem="ZBo-oy-VFV" secondAttribute="trailing" id="xaZ-y4-Brv"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="Rop-UD-BDX"/>
+                    <connections>
+                        <outlet property="imageView" destination="ZBo-oy-VFV" id="0Fu-yH-L4q"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Evd-6d-XyG" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2674" y="-218"/>
         </scene>
         <!--Profile-->
         <scene sceneID="oET-z6-ZMl">
@@ -212,7 +243,7 @@
                     <tabBarItem key="tabBarItem" title="" image="tab_editorial_active" id="WO8-Qo-69Z"/>
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="RxG-bP-3XR">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="48" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <color key="barTintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
