@@ -138,23 +138,27 @@ final class ProfileViewController: UIViewController {
             placeholder: placeholderImage,
             options: [
                 .processor(processor),
-                .scaleFactor(UIScreen.main.scale), 
-                .cacheOriginalImage,
-                .forceRefresh
+                .scaleFactor(UIScreen.main.scale), // Учитываем масштаб экрана
+                .cacheOriginalImage, // Кэшируем оригинал
+                .forceRefresh // Игнорируем кэш, чтобы обновить
             ]) { result in
 
                 switch result {
-                 
+                    // Успешная загрузка
                 case .success(let value):
-                 
+                    // Картинка
                     print(value.image)
 
+                    // Откуда картинка загружена:
+                    // - .none — из сети.
+                    // - .memory — из кэша оперативной памяти.
+                    // - .disk — из дискового кэша.
                     print(value.cacheType)
 
-             
+                    // Информация об источнике.
                     print(value.source)
 
-                   
+                    // В случае ошибки
                 case .failure(let error):
                     print(error)
                 }

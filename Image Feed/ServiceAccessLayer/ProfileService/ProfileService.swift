@@ -12,6 +12,7 @@ struct ProfileResult: Codable {
     let firstName: String
     let lastName: String
     let bio: String?
+
 }
 
 final class ProfileService {
@@ -36,7 +37,7 @@ final class ProfileService {
                 let profile = Profile(
                     username: result.username,
                     name: "\(result.firstName) \(result.lastName)"
-                        .trimmingCharacters(in: .whitespaces),
+                        .trimmingCharacters(in: .whitespaces), // Убираем лишние пробелы
                     loginName: "@\(result.username)",
                     bio: result.bio
                 )

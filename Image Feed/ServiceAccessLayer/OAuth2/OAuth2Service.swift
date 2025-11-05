@@ -49,15 +49,15 @@ final class OAuth2Service {
                 switch result {
                 case .success(let body):
                     let authToken = body.accessToken
-                    self.authToken = authToken
-                    completion(.success(authToken))
+                    self.authToken = authToken // сохраняем в свойство
+                    completion(.success(authToken)) // возвращаем наружу
 
                     self.task = nil
                     self.lastCode = nil
 
                 case .failure(let error):
                     print("[fetchOAuthToken]: Ошибка запроса: \(error.localizedDescription)")
-                    completion(.failure(error)) 
+                    completion(.failure(error)) // ошибка
 
                     self.task = nil
                     self.lastCode = nil
@@ -96,9 +96,6 @@ final class OAuth2Service {
     private struct OAuthTokenResponseBody: Codable {
         let accessToken: String
 
-        enum CodingKeys: String, CodingKey {
-            case accessToken = "access_token"
-        }
     }
 }
 
