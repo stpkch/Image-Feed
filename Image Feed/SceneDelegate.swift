@@ -11,6 +11,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: scene)
         window?.rootViewController = SplashViewController()
         window?.makeKeyAndVisible()
+        window?.backgroundColor = UIColor(named: "YP Black")
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
