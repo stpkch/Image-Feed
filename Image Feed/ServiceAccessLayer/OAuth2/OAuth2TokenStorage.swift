@@ -1,57 +1,25 @@
 import Foundation
+import SwiftKeychainWrapper
 
 final class OAuth2TokenStorage {
-    private let dataStorage =  UserDefaults.standard
+    static let shared = OAuth2TokenStorage()
+    private init() {}
+
     private let tokenKey = "token"
 
     var token: String? {
         get {
-            dataStorage.string(forKey: tokenKey)
+            // Получаем токен из Keychain
+            return KeychainWrapper.standard.string(forKey: tokenKey)
         }
         set {
             if let token = newValue {
-                dataStorage.set(token, forKey: tokenKey)
+                // Сохраняем токен в Keychain
+                KeychainWrapper.standard.set(token, forKey: tokenKey)
             } else {
-                dataStorage.removeObject(forKey: tokenKey)
+                // Удаляем токен из Keychain
+                KeychainWrapper.standard.removeObject(forKey: tokenKey)
             }
         }
     }
 }
-
-enum NetworkError: Error {
-    case httpStatusCode(Int)
-    case urlRequestError(Error)
-    case urlSessionError
-    case invalidRequest
-    case decodingError(Error)
-}
-
-extension URLSession {
-    func data(
-        for request: URLRequest,
-        completion: @escaping (Result<Data, Error>) -> Void
-    ) -> URLSessionTask {
-        let fulfillCompletionOnTheMainThread: (Result<Data, Error>) -> Void = { result in
-            DispatchQueue.main.async {
-                completion(result)
-            }
-        }
-        
-        let task = dataTask(with: request, completionHandler: { data, response, error in
-            if let data = data, let response = response, let statusCode = (response as? HTTPURLResponse)?.statusCode {
-                if 200 ..< 300 ~= statusCode {
-                    fulfillCompletionOnTheMainThread(.success(data))
-                } else {
-                    fulfillCompletionOnTheMainThread(.failure(NetworkError.httpStatusCode(statusCode)))
-                }
-            } else if let error = error {
-                fulfillCompletionOnTheMainThread(.failure(NetworkError.urlRequestError(error)))
-            } else {
-                fulfillCompletionOnTheMainThread(.failure(NetworkError.urlSessionError))
-            }
-        })
-        
-        return task
-    }
-}
-
