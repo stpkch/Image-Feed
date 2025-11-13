@@ -93,9 +93,11 @@ final class OAuth2Service {
         return request
     }
 
-    private struct OAuthTokenResponseBody: Codable {
+    struct OAuthTokenResponseBody: Decodable {
         let accessToken: String
-
+        let tokenType: String
+        let scope: String
+        let createdAt: Int
     }
 }
 

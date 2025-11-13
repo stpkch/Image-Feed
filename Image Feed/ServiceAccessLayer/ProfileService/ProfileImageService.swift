@@ -1,83 +1,82 @@
 import Foundation
 
-struct ProfileImage: Codable {
-    let small: String
-    let medium: String
-    let large: String
-
-    private enum CodingKeys: String, CodingKey {
-        case small
-        case medium
-        case large
-    }
+protocol ProfileImageServiceProtocol: AnyObject {
+    var avatarURL: String? { get }
+    func fetchProfileImageURL(username: String, completion: @escaping (Result<String, Error>) -> Void)
+    func deleteProfileImage()
 }
 
-struct UserResult: Codable {
-    let profileImage: ProfileImage
-
-    private enum CodingKeys: String, CodingKey {
-        case profileImage = "profile_image"
-    }
-}
-
-final class ProfileImageService {
-    // Синглтон
+final class ProfileImageService: ProfileImageServiceProtocol {
+    
+    static let didChangeNotification = Notification.Name(rawValue: "ProfileImageProviderDidChange")
+    
     static let shared = ProfileImageService()
     private init() {}
-
-    static let didChangeNotification = Notification.Name(rawValue: "ProfileImageProviderDidChange")
-
-    // Приватное свойство для хранения URL аватарки
-    private(set) var avatarURL: String?
-
+    
+    private let urlSession = URLSession.shared
     private var task: URLSessionTask?
-
-    // Метод для получения аватарки по имени пользователя
+    private var lastUsername: String?
+    private(set) var avatarURL: String?
+    
     func fetchProfileImageURL(username: String, completion: @escaping (Result<String, Error>) -> Void) {
+        assert(Thread.isMainThread)
+        
+        guard lastUsername != username else { return }
         task?.cancel()
-
-        guard let token = OAuth2TokenStorage.shared.token else {
-            completion(.failure(NSError(domain: "ProfileImageService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Authorization token missing"])))
+        lastUsername = username
+            
+        guard let request = makeProfileImageRequest(username: username) else {
+            completion(.failure(ProfileServiceError.invalidRequest))
             return
         }
-
-        guard let request = makeProfileImageRequest(username: username, token: token) else {
-            completion(.failure(URLError(.badURL)))
-            return
-        }
-
-        let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<UserResult, Error>) in
-            switch result {
-            case .success(let result):
+        
+        let task = urlSession.objectTask(for: request) { [weak self] (result: Result<UserResult, Error>) in
                 guard let self = self else { return }
-                self.avatarURL = result.profileImage.small
-                completion(.success(result.profileImage.small))
-
-                NotificationCenter.default
-                    .post(
+                
+                switch result {
+                case .success(let response):
+                    let avatarURL = response.profileImage.small
+                    self.avatarURL = avatarURL
+                    completion(.success(avatarURL))
+                    
+                    NotificationCenter.default.post(
                         name: ProfileImageService.didChangeNotification,
                         object: self,
-                        userInfo: ["URL": self.avatarURL ?? ""]
+                        userInfo: ["URL": avatarURL]
                     )
-
-            case .failure(let error):
-                print("[fetchProfileImageURL]: Ошибка запроса: \(error.localizedDescription)")
-                completion(.failure(error)) // Прокидываем ошибку
-            }
+                    
+                case .failure(let error):
+                    print("❌ [ProfileImageService] Network error: \(error.localizedDescription), username: \(username)")
+                    self.lastUsername = nil
+                    completion(.failure(error))
+                }
+                self.task = nil
         }
-
         self.task = task
         task.resume()
     }
-
-    private func makeProfileImageRequest(username: String, token: String) -> URLRequest? {
+    
+    private func makeProfileImageRequest(username: String) -> URLRequest? {
         guard let url = URL(string: "https://api.unsplash.com/users/\(username)") else {
+            assertionFailure("Invalid URL for user profile")
             return nil
         }
-
+        
+        guard let token = OAuth2TokenStorage().token else {
+            assertionFailure("Token not found")
+            return nil
+        }
+        
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return request
     }
+    
+    func deleteProfileImage() {
+        task = nil
+        lastUsername = nil
+        avatarURL = nil
+    }
 }
+

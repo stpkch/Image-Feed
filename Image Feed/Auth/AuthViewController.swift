@@ -1,4 +1,5 @@
 import UIKit
+import ProgressHUD
 
 protocol AuthViewControllerDelegate: AnyObject {
     func didAuthenticate(_ vc: AuthViewController)
@@ -7,84 +8,73 @@ protocol AuthViewControllerDelegate: AnyObject {
 final class AuthViewController: UIViewController {
     private let showWebViewSegueIdentifier = "ShowWebView"
     private let oauth2Service = OAuth2Service.shared
+    private let tokenStorage = OAuth2TokenStorage()
     
     weak var delegate: AuthViewControllerDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
+    }
+    @IBAction private func loginButtonTapped(_ sender: UIButton) {
+        showWebView()
+    }
+    
+    private func showWebView() {
+        let storyboard = UIStoryboard(name: "Main", bundle: .main)
+        guard let webViewVC = storyboard.instantiateViewController(withIdentifier: "WebViewController") as? WebViewController else {
+            assertionFailure("Could not instantiate WebController")
+            return
+        }
         
-        configureBackButton()
+        let authHelper = AuthHelper(configuration: .standard)
+        let presenter = WebViewPresenter(authHelper: authHelper)
+        webViewVC.presenter = presenter
+        presenter.view = webViewVC
+        
+        webViewVC.delegate = self
+        let navController = UINavigationController(rootViewController: webViewVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == showWebViewSegueIdentifier {
-            guard
-                let webViewViewController = segue.destination as? WebViewViewController
-            else {
-                assertionFailure("Failed to prepare for \(showWebViewSegueIdentifier)")
-                return
-            }
-            webViewViewController.delegate = self
-        } else {
-            super.prepare(for: segue, sender: sender)
-        }
-    }
-    
-    private func configureBackButton() {
-        navigationController?.navigationBar.backIndicatorImage = UIImage(named: "nav_back_button")
-        navigationController?.navigationBar.backIndicatorTransitionMaskImage = UIImage(named: "nav_back_button")
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-        navigationItem.backBarButtonItem?.tintColor = UIColor(named: "ypBlack")
-    }
-}
-
-extension AuthViewController: WebViewViewControllerDelegate {
-    func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
-
-        // Скрываем WebViewViewController
-        vc.dismiss(animated: true)
-
-        // Показываем индикатор загрузки
-        UIBlockingProgressHUD.show()
-
-        fetchOAuthToken(code) { [weak self] result in
-            // Скрываем индикатор загрузки
-            UIBlockingProgressHUD.dismiss()
-
-            guard let self else { return }
-
-            switch result {
-            case .success:
-                self.delegate?.didAuthenticate(self)
-            case let .failure(error):
-                print("Ошибка при аутентификации: \(error.localizedDescription)")
-                self.showAuthErrorAlert()  // Показываем алерт при ошибке
-            }
-        }
-    }
-
-    func webViewViewControllerDidCancel(_ vc: WebViewViewController) {
-        vc.dismiss(animated: true)
-    }
-}
-
-extension AuthViewController {
-    private func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void) {
-        oauth2Service.fetchOAuthToken(code) { result in
-            completion(result)
-        }
-    }
-}
-
-extension AuthViewController {
-    func showAuthErrorAlert() {
-        let alertController = UIAlertController(
-            title: "Что-то пошло не так",
+    private func showAuthErrorAlert() {
+        let alert = UIAlertController(
+            title: "Что-то пошло не так(",
             message: "Не удалось войти в систему",
-            preferredStyle: .alert
-        )
-        let okAction = UIAlertAction(title: "Ок", style: .default, handler: nil)
-        alertController.addAction(okAction)
-        present(alertController, animated: true, completion: nil)
+            preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "ОK", style: .default, handler: nil))
+        present(alert, animated: true)
+    }
+}
+
+extension AuthViewController: WebViewControllerDelegate {
+    
+    func webViewController(_ vc: WebViewController, didAuthenticateWithCode code: String) {
+        UIBlockingProgressHUD.show()
+        
+        oauth2Service.fetchOAuthToken(code) { [weak self] result in
+            guard let self else { return }
+            
+            DispatchQueue.main.async {
+                UIBlockingProgressHUD.dismiss()
+                
+                switch result {
+                case .success(let token):
+                    self.tokenStorage.token = token
+                    self.delegate?.didAuthenticate(self)
+                    print("Successfully fetched token: \(token)")
+                    
+                case .failure(let error):
+                    print("❌Failed to fetch token: \(error)")
+                    vc.dismiss(animated: true) {
+                        self.showAuthErrorAlert()
+                    }
+                }
+            }
+        }
+    }
+    
+    func webViewControllerDidCancel(_ vc: WebViewController) {
+        vc.dismiss(animated: true)
     }
 }
