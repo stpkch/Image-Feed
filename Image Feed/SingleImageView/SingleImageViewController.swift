@@ -3,7 +3,7 @@ import UIKit
 
 final class SingleImageViewController: UIViewController {
     
-    @IBOutlet private var singleImageView: UIImageView!
+    @IBOutlet private var ImageView: UIImageView!
     @IBOutlet private var scrollView: UIScrollView!
     
     @IBAction private func didTapBackButton(_ sender: Any) {
@@ -21,8 +21,8 @@ final class SingleImageViewController: UIViewController {
     var image: UIImage? {
         didSet {
             guard isViewLoaded, let image else { return }
-            singleImageView.image = image
-            singleImageView.frame.size = image.size
+            ImageView.image = image
+            ImageView.frame.size = image.size
             rescaleAndCenterImageInScrollView(image: image)
         }
     }
@@ -35,8 +35,8 @@ final class SingleImageViewController: UIViewController {
         scrollView.maximumZoomScale = 1.25
         
         if let image = image {
-            singleImageView.image = image
-            singleImageView.frame.size = image.size
+            ImageView.image = image
+            ImageView.frame.size = image.size
             scrollView.contentSize = image.size
             rescaleAndCenterImageInScrollView(image: image)
         } else {
@@ -48,14 +48,14 @@ final class SingleImageViewController: UIViewController {
         guard let imageURL else { return }
         
         UIBlockingProgressHUD.show()
-        singleImageView.kf.setImage(with: imageURL) { [weak self] result in
+        ImageView.kf.setImage(with: imageURL) { [weak self] result in
             UIBlockingProgressHUD.dismiss()
             
             guard let self else { return }
             switch result {
             case .success(let imageResult):
-                self.singleImageView.image = imageResult.image
-                self.singleImageView.frame.size = imageResult.image.size
+                self.ImageView.image = imageResult.image
+                self.ImageView.frame.size = imageResult.image.size
                 self.scrollView.contentSize = imageResult.image.size
                 self.rescaleAndCenterImageInScrollView(image: imageResult.image)
             case .failure:
@@ -100,7 +100,7 @@ final class SingleImageViewController: UIViewController {
     }
     
     private func updateContentInset() {
-        let imageViewSize = singleImageView.frame.size
+        let imageViewSize = ImageView.frame.size
         let scrollViewSize = scrollView.bounds.size
         
         let verticalInset = max(0, (scrollViewSize.height - imageViewSize.height) / 2)
@@ -116,5 +116,5 @@ final class SingleImageViewController: UIViewController {
 }
 
 extension SingleImageViewController: UIScrollViewDelegate {
-    func viewForZooming(in scrollView: UIScrollView) -> UIView? { singleImageView }
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { ImageView }
 }

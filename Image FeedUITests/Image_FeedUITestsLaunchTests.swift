@@ -8,6 +8,8 @@
 import XCTest
 
 final class Image_FeedUITestsLaunchTests: XCTestCase {
+    
+    
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
@@ -30,4 +32,7 @@ final class Image_FeedUITestsLaunchTests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
     }
+    
+    
 }
+
